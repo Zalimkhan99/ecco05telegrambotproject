@@ -14,8 +14,22 @@ let codeIn =''; // проверочный код
 bot.on('message', msg=>{
     chatId = msg.chat.id;
 })
+function sendTextClickInKeyboard() {
+return "balance"
+}
 
-
+function sendKeyboard() {
+    if(auth){
+        console.log(auth)
+        bot.sendMessage(chatId,"Чтоб узнать кол-во баллов нажмите на кнопку",{
+            'reply_markup':JSON.stringify({
+                'inline_keyboard':[
+                    [{text: 'Баланс' , callback_data: '1_1'}]
+                ]
+            })
+        })
+    }
+}
 
 function createVerificationCode(){
     let VerificationCode = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
@@ -28,6 +42,7 @@ bot.onText(/\/start/, msg => {
     chatId = msg.chat.id;
     if (auth == true) {
         text = 'Добро пожаловать! ' + msg.chat.first_name;
+        sendKeyboard();
     } else text = 'Введите номер телефона (79*********): '
     bot.sendMessage(msg.chat.id, text);
 
@@ -42,7 +57,7 @@ async function sendHttpSMSMobileGroup( ){
     return responseCheckUser
 }
 
-    //отправить telegram id в 1С
+//отправить telegram id в 1С
 async function sendHttpTelegramId( codeVer){
     let authurl = url+'iduserecco/'+chatId+ '/'+ phone;
     console.log(authurl);
@@ -51,20 +66,20 @@ async function sendHttpTelegramId( codeVer){
     if(responseCheckUser.ok){console.log(chatId)}
     return responseCheckUser
 }
-    //проверяем пользователя в базе и записываем в регистр проверечный код
- async function checkHttpNumberPhoneUser( codeVer){
-     let authurl = url+'ecco99apitelegram/'+phone+ '/'+ codeVer;
-     console.log(authurl);
-     let responseCheckUser= await fetch(authurl);
-     console.log(responseCheckUser.status)
-     if(responseCheckUser.ok){
-         checkAuthFlag=true;
-         bot.sendMessage(chatId,"Введите код с смс");
-           sendHttpSMSMobileGroup();
-     }
-     else bot.sendMessage(chatId,"Номер введен не верно или вас нет в базе. (79********* без пробелов)")
-     return responseCheckUser
- }
+//проверяем пользователя в базе и записываем в регистр проверечный код
+async function checkHttpNumberPhoneUser( codeVer){
+    let authurl = url+'ecco99apitelegram/'+phone+ '/'+ codeVer;
+    console.log(authurl);
+    let responseCheckUser= await fetch(authurl);
+    console.log(responseCheckUser.status)
+    if(responseCheckUser.ok){
+        checkAuthFlag=true;
+        bot.sendMessage(chatId,"Введите код с смс");
+        sendHttpSMSMobileGroup();
+    }
+    else bot.sendMessage(chatId,"Номер введен не верно или вас нет в базе. (79********* без пробелов)")
+    return responseCheckUser
+}
 //проверка проверочного кода
 async function checkHttpVerificationCode(codeVer){
     let authurl = url+'eccocheck/'+phone+ '/'+ codeVer;
@@ -74,6 +89,7 @@ async function checkHttpVerificationCode(codeVer){
     if(responseCheckUser.ok){
         auth=true;bot.sendMessage(chatId,"Вы идентифицировали свой номер, в нашей базе");
         sendHttpTelegramId();
+        sendKeyboard()
     }
     else bot.sendMessage(chatId,"код неверный!");
 
@@ -84,7 +100,7 @@ async function checkHttpVerificationCode(codeVer){
 
 // срабоатет когда введем номер телефона
 bot.on ('message',  msg=> {
-   let  phoneIn = msg.text;
+    let  phoneIn = msg.text;
 
     if (checkAuthFlag== false && phoneIn.match(/^\d+$/)){
         phone= phoneIn;
@@ -101,6 +117,12 @@ bot.on('message', msg=>{
         checkHttpVerificationCode(code);
     }
 })
+//получение данных при нажатии на кнопку Баланс
+bot.on('callback_query', query=>{
+    bot.sendMessage(query.message.chat.id, sendTextClickInKeyboard())
+})
+
+
 
 
 
