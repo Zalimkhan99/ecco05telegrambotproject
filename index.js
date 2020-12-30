@@ -1,23 +1,68 @@
 const TelegramBot = require('node-telegram-bot-api')
-const fetch = require("node-fetch");
+//const fetch = require("node-fetch");
 const token = '1356849321:AAGYRYMGBGnnOzJCubrm2B3reK2qWZNXXV8';
 const bot = new TelegramBot(token, {polling:true});
 
-
+const fetch1 = require("node-fetch");
 const url = 'http://192.168.1.162/InfoBase3/hs/TelegramBot/';
 let checkAuthFlag = false; // проверят существует ли пользователь
 let auth = false; // проверяет авторизирован ли пользователь
 let chatId = ''; //ид пользователя
 let phone = ''; //номер телефона
 let codeIn =''; // проверочный код
+let balance = '';
+let response= '';
 
+async function  checkTelegramIdInBase1C (){
+    let checkIdURL= url+'chekidver/'+chatId ;
+    let response1C = await fetch1(checkIdURL)
+    console.log(checkIdURL);
+    if(!response1C.ok){
+        auth = false;
+         checkAuthFlag = false;
+        //phone = '';
+         //codeIn = '';
+        // response = '';
+        return false;
+    }
+    else {
+        auth = true;
+        checkAuthFlag = true;
+        console.log(auth);
+        return true;
+    }
+
+}
+// заприсывает сhartId пользователя
 bot.on('message', msg=>{
+    checkTelegramIdInBase1C ();
     chatId = msg.chat.id;
 })
-function sendTextClickInKeyboard() {
-return "balance"
+// отрабатывает при клики на клавишу
+async function sendTextClickInKeyboard() {
+    checkTelegramIdInBase1C ();
+    let flagTauth= checkTelegramIdInBase1C();
+    if(!flagTauth){
+
+    let urlGetBalance = url+'infobonus/'+phone;
+    response = await fetch1 (urlGetBalance);
+    let commit =  response.json();
+    balance= JSON.stringify(commit);
+    return balance.replace(/["{()}]/g, ' ');
+    }
+    else {
+
+        let urlGetBalance = url+'authusertrue/'+chatId;
+        response = await fetch1 (urlGetBalance);
+        let commit = await response.json();
+        balance= JSON.stringify(commit);
+        return balance
+    }
+    //console.log(balance.replace(/["{()}]/g, ' '));
+
 }
 
+// создает клавиатуру
 function sendKeyboard() {
     if(auth){
         console.log(auth)
@@ -31,6 +76,7 @@ function sendKeyboard() {
     }
 }
 
+// создает проверочный код
 function createVerificationCode(){
     let VerificationCode = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
     return VerificationCode;
@@ -38,20 +84,28 @@ function createVerificationCode(){
 let codeVer = createVerificationCode();
 //когда боту отправляем комнду /start
 bot.onText(/\/start/, msg => {
-    let text = '';
+    checkTelegramIdInBase1C()
+
+let check = checkTelegramIdInBase1C();
     chatId = msg.chat.id;
-    if (auth == true) {
+setTimeout(()=>{
+    let text = '';
+
+    console.log(check);
+    if (auth == true&& check) {
         text = 'Добро пожаловать! ' + msg.chat.first_name;
         sendKeyboard();
     } else text = 'Введите номер телефона (79*********): '
     bot.sendMessage(msg.chat.id, text);
+},1000)
+
 
 })
-
+// отправляет сообщение с кодом проверки
 async function sendHttpSMSMobileGroup( ){
     let authurl = url+'sendcodever/'+phone+ '/'+ codeVer;
     console.log(authurl);
-    let responseCheckUser= await fetch(authurl);
+    let responseCheckUser= await fetch1(authurl);
     console.log(responseCheckUser.status)
     if(responseCheckUser.ok){console.log(chatId)}
     return responseCheckUser
@@ -61,8 +115,8 @@ async function sendHttpSMSMobileGroup( ){
 async function sendHttpTelegramId( codeVer){
     let authurl = url+'iduserecco/'+chatId+ '/'+ phone;
     console.log(authurl);
-    let responseCheckUser= await fetch(authurl);
-    console.log(responseCheckUser.status)
+    let responseCheckUser= await fetch1(authurl);
+    //console.log(responseCheckUser.status)
     if(responseCheckUser.ok){console.log(chatId)}
     return responseCheckUser
 }
@@ -70,8 +124,8 @@ async function sendHttpTelegramId( codeVer){
 async function checkHttpNumberPhoneUser( codeVer){
     let authurl = url+'ecco99apitelegram/'+phone+ '/'+ codeVer;
     console.log(authurl);
-    let responseCheckUser= await fetch(authurl);
-    console.log(responseCheckUser.status)
+    let responseCheckUser= await fetch1(authurl);
+    //console.log(responseCheckUser.status)
     if(responseCheckUser.ok){
         checkAuthFlag=true;
         bot.sendMessage(chatId,"Введите код с смс");
@@ -80,16 +134,18 @@ async function checkHttpNumberPhoneUser( codeVer){
     else bot.sendMessage(chatId,"Номер введен не верно или вас нет в базе. (79********* без пробелов)")
     return responseCheckUser
 }
-//проверка проверочного кода
+//проверка введеного проверочного кода
 async function checkHttpVerificationCode(codeVer){
     let authurl = url+'eccocheck/'+phone+ '/'+ codeVer;
-    console.log(authurl);
-    let responseCheckUser= await fetch(authurl);
-    console.log(responseCheckUser.status)
+   // console.log(authurl);
+    let responseCheckUser= await fetch1(authurl);
+    //console.log(responseCheckUser.status)
     if(responseCheckUser.ok){
         auth=true;bot.sendMessage(chatId,"Вы идентифицировали свой номер, в нашей базе");
         sendHttpTelegramId();
-        sendKeyboard()
+        sendKeyboard();
+        sendTextClickInKeyboard();
+
     }
     else bot.sendMessage(chatId,"код неверный!");
 
@@ -119,19 +175,18 @@ bot.on('message', msg=>{
 })
 //получение данных при нажатии на кнопку Баланс
 bot.on('callback_query', query=>{
-    bot.sendMessage(query.message.chat.id, sendTextClickInKeyboard())
+    chatId = query.message.chat.id;
+
+    checkTelegramIdInBase1C ();
+    setTimeout(()=>{
+        if(auth ==false) bot.sendMessage(query.message.chat.id, "Введите свой номер, чтобы узнать баланс")
+        else {
+            sendTextClickInKeyboard();
+            setTimeout(()=>{
+                bot.sendMessage(query.message.chat.id, balance.replace(/["{()}]/g, ' '));
+            },1000)
+
+        }
+    },1000)
+
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
