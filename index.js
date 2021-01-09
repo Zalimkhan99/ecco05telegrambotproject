@@ -1,8 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api')
-//const fetch = require("node-fetch");
 const token = '1356849321:AAGYRYMGBGnnOzJCubrm2B3reK2qWZNXXV8';
 const bot = new TelegramBot(token, {polling:true});
-
 const fetch1 = require("node-fetch");
 const url = 'http://192.168.1.162/InfoBase3/hs/TelegramBot/';
 let checkAuthFlag = false; // проверят существует ли пользователь
@@ -19,9 +17,9 @@ async function  checkTelegramIdInBase1C (){
     console.log(checkIdURL);
     if(!response1C.ok){
         auth = false;
-         checkAuthFlag = false;
+        checkAuthFlag = false;
         //phone = '';
-         //codeIn = '';
+         codeIn = '';
         // response = '';
         return false;
     }
@@ -33,14 +31,29 @@ async function  checkTelegramIdInBase1C (){
     }
 
 }
+
+function createKeyboard(){
+
+    return (bot.sendMessage(chatId,balance.replace(/["{()}]/g, ' '),{
+    reply_markup: {
+        keyboard:[['Баланс']]
+    }
+ }))
+}
+
+
 // заприсывает сhartId пользователя
 bot.on('message', msg=>{
-    checkTelegramIdInBase1C ();
+
     chatId = msg.chat.id;
+    //setTimeout(()=>{
+     //   checkTelegramIdInBase1C ();
+   // },1)
+
 })
 // отрабатывает при клики на клавишу
 async function sendTextClickInKeyboard() {
-    checkTelegramIdInBase1C ();
+
     let flagTauth= checkTelegramIdInBase1C();
     if(!flagTauth){
 
@@ -48,7 +61,7 @@ async function sendTextClickInKeyboard() {
     response = await fetch1 (urlGetBalance);
     let commit =  response.json();
     balance= JSON.stringify(commit);
-    return balance.replace(/["{()}]/g, ' ');
+    return balance;
     }
     else {
 
@@ -56,13 +69,13 @@ async function sendTextClickInKeyboard() {
         response = await fetch1 (urlGetBalance);
         let commit = await response.json();
         balance= JSON.stringify(commit);
-        return balance
+        return balance;
     }
-    //console.log(balance.replace(/["{()}]/g, ' '));
 
 }
 
 // создает клавиатуру
+/*
 function sendKeyboard() {
     if(auth){
         console.log(auth)
@@ -75,7 +88,7 @@ function sendKeyboard() {
         })
     }
 }
-
+*/
 // создает проверочный код
 function createVerificationCode(){
     let VerificationCode = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
@@ -84,9 +97,13 @@ function createVerificationCode(){
 let codeVer = createVerificationCode();
 //когда боту отправляем комнду /start
 bot.onText(/\/start/, msg => {
-    checkTelegramIdInBase1C()
+
 
 let check = checkTelegramIdInBase1C();
+codeVer = createVerificationCode();
+phone='';
+checkAuthFlag= false;
+console.log(check+' -chektest')
     chatId = msg.chat.id;
 setTimeout(()=>{
     let text = '';
@@ -94,7 +111,12 @@ setTimeout(()=>{
     console.log(check);
     if (auth == true&& check) {
         text = 'Добро пожаловать! ' + msg.chat.first_name;
-        sendKeyboard();
+        setTimeout(()=>{
+            sendTextClickInKeyboard();
+        },100)
+        setTimeout(()=>{
+            createKeyboard();
+        },1200)
     } else text = 'Введите номер телефона (79*********): '
     bot.sendMessage(msg.chat.id, text);
 },1000)
@@ -142,9 +164,17 @@ async function checkHttpVerificationCode(codeVer){
     //console.log(responseCheckUser.status)
     if(responseCheckUser.ok){
         auth=true;bot.sendMessage(chatId,"Вы идентифицировали свой номер, в нашей базе");
-        sendHttpTelegramId();
-        sendKeyboard();
-        sendTextClickInKeyboard();
+        sendHttpTelegramId()
+        setTimeout(()=>{
+            sendTextClickInKeyboard();
+        },100)
+       setTimeout(()=>{
+           createKeyboard();
+       },1200)
+
+
+       // sendKeyboard();
+        //sendTextClickInKeyboard();
 
     }
     else bot.sendMessage(chatId,"код неверный!");
@@ -174,19 +204,45 @@ bot.on('message', msg=>{
     }
 })
 //получение данных при нажатии на кнопку Баланс
+/*
 bot.on('callback_query', query=>{
     chatId = query.message.chat.id;
 
-    checkTelegramIdInBase1C ();
+    setTimeout(()=>{
+        checkTelegramIdInBase1C ();
+    },0)
+
+    setTimeout(()=>{
+        if(auth == true){
+            sendTextClickInKeyboard();
+            bot.sendMessage(query.message.chat.id, balance.replace(/["{()}]/g, ' '));
+        }
+    },100)
     setTimeout(()=>{
         if(auth ==false) bot.sendMessage(query.message.chat.id, "Введите свой номер, чтобы узнать баланс")
-        else {
-            sendTextClickInKeyboard();
-            setTimeout(()=>{
-                bot.sendMessage(query.message.chat.id, balance.replace(/["{()}]/g, ' '));
-            },1000)
 
+    },3000)
+
+
+
+})
+
+ */
+
+bot.on('message', msg=>{
+    let textMsg = msg.text;
+    chatId = msg.chat.id;
+
+   // checkTelegramIdInBase1C();
+    if(textMsg=='Баланс') {
+        sendTextClickInKeyboard();
+        console.log(auth)
+    }
+    setTimeout(()=>{
+        if(auth==true&&textMsg=='Баланс'){
+            createKeyboard();
         }
-    },1000)
+        else if(auth==false&&textMsg=='Баланс') bot.sendMessage(chatId, 'Введите свой номер телефона, чтоб посмотрерть баланс(79*********)')
+    },100)
 
 })
