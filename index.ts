@@ -1,13 +1,4 @@
-import {
-    checkCodeEnter,
-    checkIDTo1CBase,
-    createKeyboard,
-    getBalanceTo1C,
-    getEnteredMessage,
-    getVerificationCode,
-    registrationUser,
-    sendSMSMobileGroup
-} from "./src/CommonFunctions";
+import {checkCodeEnter, checkIDTo1CBase, createKeyboard, getBalanceTo1C, getEnteredMessage, getVerificationCode, registrationPhoneUser, sendSMSMobileGroup} from "./src/CommonFunctions";
 import { Users } from "./src/Users";
 
 const TelegramBot = require("node-telegram-bot-api");
@@ -26,23 +17,20 @@ let checkCode: boolean = false;
 
 bot.onText(/\/start/, msg => {
     checkIDTo1CBase(msg, msg.chat.id, checkIn1C, bot);
-    setTimeout(() => {
-        if (Users.auth && Users.auth != undefined) {
-            getBalanceTo1C(msg.chat.id).catch(error => console.log(error));
-            createKeyboard(bot, msg.chat.id);
-        } else
-            bot.sendMessage(
-                msg.chat.id,
-                "Добро пожаловать! Введите команду /reg для регестрации."
-            );
-    }, 900);
+    createKeyboard(bot, msg.chat.id);
+    if (!Users.auth && Users.auth != undefined) {
+        bot.sendMessage(
+            msg.chat.id,
+            "Нажмите на кнопку регистрация."
+        );
+    }
 });
 
-bot.onText(/\/reg/, msg => {
+bot.onText(/Регистрация/, msg => {
     let UserCheck: boolean = checkIDTo1CBase(msg, chatID, checkIn1C, bot);
     console.log(UserCheck);
     if (UserCheck) {
-        bot.sendMessage(msg.chat.id, "Вы прошли регестрацию");
+        bot.sendMessage(msg.chat.id, "Вы уже прошли регистрацию");
     } else if (UserCheck != undefined) {
         code = getVerificationCode();
         bot.sendMessage(msg.chat.id, "Введите номер телефона (79*********)");
@@ -53,10 +41,8 @@ bot.onText(/\/reg/, msg => {
 });
 bot.on("message", msg => {
     numberPhone = getEnteredMessage(msg);
-    let lenght = numberPhone.length;
-    console.log("www" + checkPhone);
-    if (numberPhone.match(/^\d+$/) && !checkPhone && checkCode == false) {
-        registrationUser(
+    if (numberPhone.match(/^\d+$/) && !checkPhone && checkCode == false &&numberPhone.length>9) {
+        registrationPhoneUser(
             bot,
             msg,
             (numberPhone = numberPhone),
@@ -66,6 +52,9 @@ bot.on("message", msg => {
         setTimeout(() => {
             sendSMSMobileGroup(code);
         }, 1000);
+    }
+    else if (numberPhone.match(/^\d+$/) && !checkPhone) {
+        bot.sendMessage(msg.chat.id, "Недостаточно символов")
     }
 });
 bot.on("message", msg => {
@@ -78,13 +67,16 @@ bot.on("message", msg => {
     }
 });
 
-bot.onText(/Баланс/, msg => {
-    let balance: string;
-    getBalanceTo1C(msg.chat.id).catch(error => console.log(error));
-    setTimeout(() => {
-        balance = Users.balance;
-        if (balance != undefined) {
-            bot.sendMessage(msg.chat.id, balance);
-        } else bot.sendMessage(msg.chat.id, "Зарегистрируйтесь, чтобы узнать баланс");
-    }, 850);
+bot.onText(/Баланс/, async msg => {
+    checkIDTo1CBase(msg, chatID, checkIn1C, bot);
+    setTimeout(()=>{
+        if ( Users.auth == false ) {
+            bot.sendMessage(msg.chat.id, "Зарегистрируйтесь, чтобы узнать баланс");
+        }
+        else {
+            getBalanceTo1C(msg.chat.id,bot).catch(error => console.log(error));
+        }
+    },900)
 });
+
+
