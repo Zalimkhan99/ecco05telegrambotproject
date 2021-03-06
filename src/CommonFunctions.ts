@@ -33,28 +33,17 @@ export function checkIDTo1CBase(msg, chatID, checkIn1C, bot) {
     console.log(Users.auth);
     return Users.auth;
 }
-export async function registrationUser(
-    bot,
-    msg,
-    phoneNumber,
-    codeVer,
-    checkPhone
-) {
-    let urlCheckPhoneNumber = urlRequestHTTP(
-        "ecco99apitelegram/",
-        phoneNumber,
-        codeVer
-    );
+export async function registrationPhoneUser(bot, msg, phoneNumber, codeVer, checkPhone) {
+    let urlCheckPhoneNumber = urlRequestHTTP("ecco99apitelegram/", phoneNumber, codeVer);
     checkRequestHTTP(urlCheckPhoneNumber)
         .then(res => {
             if (res) {
                 Users.phone = phoneNumber;
-                checkPhone = res;
                 bot.sendMessage(msg.chat.id, "Введите код с СМС!");
                 checkPhone = true;
             } else {
                 checkPhone = false;
-                bot.sendMessage(msg.chat.id, "Номер введен не правильно, повторите попытку /reg");
+                bot.sendMessage(msg.chat.id, "Номер введен неправильно или ваши данные с анкеты не внесены, подождите 15 минут и попробуйте снова");
             }
         })
         .then(() => {
@@ -69,8 +58,6 @@ export function checkCodeEnter(bot, msg, code, checkCode) {
             if (res) {
                 bot.sendMessage(msg.chat.id, "Регистрация прошла успешно!");
                 checkCode = true;
-                getBalanceTo1C(msg.chat.id).catch();
-                createKeyboard(bot, msg.chat.id);
                 let id1C = urlRequestHTTP("iduserecco/", Users.id, Users.phone);
                 console.log(id1C);
                 checkRequestHTTP(id1C).catch(error =>
@@ -79,7 +66,7 @@ export function checkCodeEnter(bot, msg, code, checkCode) {
                 console.log(id1C);
             } else {
                 checkCode = false;
-                bot.sendMessage(msg.chat.id, "Код не верный, повторите попытку /reg");
+                bot.sendMessage(msg.chat.id, "Код не верный, нажмите на кнопку регистрация и повторите попытку.");
             }
         })
         .then(() => {
@@ -93,15 +80,14 @@ export function sendSMSMobileGroup(code) {
         console.log(error + " sms with code, Don't send")
     );
 }
-export async function getBalanceTo1C(chatID) {
-    let urlBalance = urlRequestHTTP("authusertrue/", chatID);
-    ParseJSON(urlBalance).then(r => (Users.balance = r));
-    console.log(Users.balance);
-}
 export function createKeyboard(bot, chatId) {
-    return bot.sendMessage(chatId, "Добро пожаловать", {
+    return bot.sendMessage(chatId, "Добро пожаловать!", {
         reply_markup: {
-            keyboard: [["Баланс"]]
+            keyboard: [["💰Баланс","🚀Сгораемые баллы","✅Постоянные баллы"],["🌀Регистрация "]]
         }
     });
+}
+export async function getBalanceTo1C(chatID,bot) {
+    let urlBalance = urlRequestHTTP("authusertrue/", chatID);
+    ParseJSON(urlBalance).then(r  =>{Users.balance =r ; bot.sendMessage(chatID,Users.balance+'💰') });
 }
