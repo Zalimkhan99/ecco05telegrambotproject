@@ -1,6 +1,6 @@
 const fetch = require("node-fetch");
 export class WebService {
-    private _url: string = "http://192.168.1.162/InfoBase3/hs/TelegramBot/";
+    private _url: string = "http://192.168.1.162/InfoBase/hs/EccpBot/";
     public get url(): string {
         return this._url;
     }
@@ -31,6 +31,16 @@ export async function checkRequestHTTP(url: string) {
 export async function ParseJSON(url) {
     let response = await fetch(url);
     let commit = await response.json();
+
     let data = JSON.stringify(commit);
-    return data.replace(/["{()}]/g, " ");
+    let balance =  JSON.parse(data);
+    let strInBalance = ""
+    let strBalance="";
+    for(let key in balance){
+if (balance[key].Period=="Сейчас") strInBalance = " баланс = ";
+else strInBalance = " баланс будет = "
+       strBalance+= (balance[key].Period +"," + strInBalance+"💰"+balance[key].Balance+"\n" )
+    }
+
+    return strBalance
 }

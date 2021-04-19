@@ -1,10 +1,19 @@
 import { Users } from "./Users";
 import { checkRequestHTTP, ParseJSON, urlRequestHTTP } from "./WebService";
-
+/**
+ *getVerificationCode - Создает 4-х знч. код   для подтв. регистрации
+ **/
 export function getVerificationCode() {
     let VerificationCode = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
     return VerificationCode;
 }
+/**
+*getEnteredMessage- Проверяет полученные сообщения от пользователей
+* Если текст сообщения начинатся с цифры то
+* записывает в переменную этот текс и возвращает его.
+* @param msg -  метод Telegram для работы с полученными сообщениями от пользователей.
+* Более подробней описано в документации https://github.com/yagop/node-telegram-bot-api
+* */
 export function getEnteredMessage(msg) {
     let textUser: string;
     let text = msg.text;
@@ -13,7 +22,13 @@ export function getEnteredMessage(msg) {
     } else textUser = "";
     return textUser;
 }
-export function checkIDTo1CBase(msg, chatID, checkIn1C, bot) {
+/**
+*checkIDTo1CBase - функция проверяет есть ли пользователь в базе 1с по телеграм ид.
+ *  @param msg - метод API Telegram бота. msg - метод для работы с полученными сообщениями от пользователей.
+ *  @param chatID- записывает id в  глобальную переменную,
+ *  @param checkIn1C - в глобальную переменую устанвливает значение true или false
+ **/
+export function checkIDTo1CBase(msg, chatID, checkIn1C) {
     let urlCheck1C = urlRequestHTTP("chekidver/", msg.chat.id);
     checkRequestHTTP(urlCheck1C)
         .then(res => {
@@ -33,8 +48,17 @@ export function checkIDTo1CBase(msg, chatID, checkIn1C, bot) {
     console.log(Users.auth);
     return Users.auth;
 }
-export async function registrationPhoneUser(bot, msg, phoneNumber, codeVer, checkPhone) {
-    let urlCheckPhoneNumber = urlRequestHTTP("ecco99apitelegram/", phoneNumber, codeVer);
+
+/**
+ * registrationPhoneUser- функция - Провекра, есть ли  номер телефона  в базе.
+ * @param bot - API telegram bot
+ * @param msg - метод API Telegram бота. msg - метод для работы с полученными сообщениями от пользователей
+ * @param phoneNumber  -  Получает номер телефона с глобальной переменной
+ * @param code  - получает код подтверждения  с глобальной перемнной.
+ * @param checkPhone checkPhone- записывает в глобальную переменную есть ли тел. номер в базе.
+ */
+export async function registrationPhoneUser(bot, msg, phoneNumber, code, checkPhone) {
+    let urlCheckPhoneNumber = urlRequestHTTP("ecco99apitelegram/", phoneNumber, code);
     checkRequestHTTP(urlCheckPhoneNumber)
         .then(res => {
             if (res) {
@@ -51,6 +75,14 @@ export async function registrationPhoneUser(bot, msg, phoneNumber, codeVer, chec
         });
 }
 
+/**
+ * checkCodeEnter - функция проверят введный код пользователя
+ * @param bot - API telegram bot
+ * @param msg - метод API Telegram бота. msg - метод для работы с полученными сообщениями от пользователей
+ * @param code - получает сode с глобальной переменной
+ * @param checkCode - записывает true или false в глобальную переменную
+ *если регистрация прошла успешно, тогда Телеграм ID записывается в базу.
+ */
 export function checkCodeEnter(bot, msg, code, checkCode) {
     let urlCheckCode = urlRequestHTTP("eccocheck/", Users.phone, code);
     checkRequestHTTP(urlCheckCode)
@@ -73,21 +105,45 @@ export function checkCodeEnter(bot, msg, code, checkCode) {
             console.log(urlCheckCode);
         });
 }
-export function sendSMSMobileGroup(code) {
-    let urlSMSMobileGroup = urlRequestHTTP("sendcodever/", Users.phone, code);
+
+/**
+ *sendSMSMobileGroup - отправляет смс с кодом пользователю.
+ * @param code - получает код с глобальнной переменной
+ * @param bot - API telegram bot
+ * @param msg - Метод API Telegram бота. msg - метод для работы с полученными сообщениями от пользователей
+ */
+export async function  sendSMSMobileGroup(code,bot,msg) {
+    let urlSMSMobileGroup = await urlRequestHTTP("sendcodever/", Users.phone, code);
+    let check = await checkRequestHTTP(urlSMSMobileGroup)
+    console.log(check+"555")
+    if(check==false){
+        bot.sendMessage(msg.chat.id, "Если смс не пришло, через 10 мин кликнете на кнопку регистрация и ввдеити номер повторно")
+    }
     console.log(urlSMSMobileGroup);
     checkRequestHTTP(urlSMSMobileGroup).catch(error =>
-        console.log(error + " sms with code, Don't send")
+       console.log(error)
     );
 }
+
+/**
+ * createKeyboard - создает клавиатуру
+ * @param bot - API telegram bot
+ * @param chatId - получает ID с глобальной переменной
+ */
 export function createKeyboard(bot, chatId) {
     return bot.sendMessage(chatId, "Добро пожаловать!", {
         reply_markup: {
-            keyboard: [["💰Баланс","🚀Сгораемые баллы","✅Постоянные баллы"],["🌀Регистрация "]]
+            keyboard: [["💰Баланс"],["🌀Регистрация "]]
         }
     });
 }
+
+/**
+ * getBalanceTo1C - Получает баланс с базы и отправляет его пользователю
+ * @param chatID - получает ID с глобальной переменной
+ * @param bot - API telegram bot
+ */
 export async function getBalanceTo1C(chatID,bot) {
     let urlBalance = urlRequestHTTP("authusertrue/", chatID);
-    ParseJSON(urlBalance).then(r  =>{Users.balance =r ; bot.sendMessage(chatID,Users.balance+'💰') });
+    ParseJSON(urlBalance).then(r  =>{Users.balance =r ; bot.sendMessage(chatID,Users.balance) });
 }
