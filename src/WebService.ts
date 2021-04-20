@@ -18,6 +18,10 @@ export function urlRequestHTTP(
         return url + method + param1;
     }
 }
+/**
+ * checkRequestHTTP - проверяет состояние http запроса
+ * Если 200 возращает true иначе false
+ * */
 export async function checkRequestHTTP(url: string) {
     let response1C = await fetch(url).catch(error => error);
     let auth;
@@ -28,6 +32,11 @@ export async function checkRequestHTTP(url: string) {
     }
     return auth;
 }
+
+/**
+ * @param url
+ * ParseJSON - Обрабатывает данные о кол-ве бонусных баллов пользователя.
+ */
 export async function ParseJSON(url) {
     let response = await fetch(url);
     let commit = await response.json();
@@ -41,6 +50,5 @@ if (balance[key].Period=="Сейчас") strInBalance = " баланс = ";
 else strInBalance = " баланс будет = "
        strBalance+= (balance[key].Period +"," + strInBalance+"💰"+balance[key].Balance+"\n" )
     }
-
     return strBalance
 }

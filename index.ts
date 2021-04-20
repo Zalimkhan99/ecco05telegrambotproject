@@ -1,10 +1,10 @@
 import {checkCodeEnter, checkIDTo1CBase, createKeyboard, getBalanceTo1C, getEnteredMessage, getVerificationCode, registrationPhoneUser, sendSMSMobileGroup} from "./src/CommonFunctions";
 import { Users } from "./src/Users";
-
 const TelegramBot = require("node-telegram-bot-api");
-const token = '1347735458:AAFwL-fwNKCDwxGhTTofXnaVbzfJtrj18Ts';// @testZalim1c_bot
+/** выбор бота*/
+//const token = '1347735458:AAFwL-fwNKCDwxGhTTofXnaVbzfJtrj18Ts';// @testZalim1c_bot
 //const token = '1356849321:AAGYRYMGBGnnOzJCubrm2B3reK2qWZNXXV8'; //Node_test_zalimkhan_bot
-//const token = "1575102522:AAEqgjSsotYSPMuYnOYwJtzC7r_QqdIe15s"; // Ecco05
+const token = "1575102522:AAEqgjSsotYSPMuYnOYwJtzC7r_QqdIe15s"; // Ecco05 бот
 const bot = new TelegramBot(token, {
     polling: true
 });
@@ -16,7 +16,6 @@ let code: number;
 let codeEnter: number;
 let checkPhone: boolean = false;
 let checkCode: boolean = false;
-
 /** Пользователь отправляет Start */
 bot.onText(/\/start/, async msg => {
     await checkIDTo1CBase(msg, msg.chat.id, checkIn1C);
@@ -29,7 +28,6 @@ bot.onText(/\/start/, async msg => {
             );
         }
     },2)
-
 });
 /** Когда нажимают на клавишу регистрация */
 bot.onText(/Регистрация/, msg => {
@@ -38,14 +36,13 @@ bot.onText(/Регистрация/, msg => {
     if (UserCheck) {
         bot.sendMessage(msg.chat.id, "Вы уже прошли регистрацию");
     } else if (UserCheck != undefined) {
-        code = getVerificationCode();
+        code = getVerificationCode();/** запись в глобальную переменную сode*/
         bot.sendMessage(msg.chat.id, "Введите номер телефона (79*********)");
         checkPhone = false;
         checkCode = false;
         numberPhone = "";
     }
 });
-
 /**
  * registrationPhoneUser
  * @param numberPhone - присваивает  значание с глобальной переменой "numberPhone"
@@ -88,5 +85,3 @@ bot.onText(/Баланс/, async msg => {
         }
     },900)
 });
-
-

@@ -23,11 +23,11 @@ export function getEnteredMessage(msg) {
     return textUser;
 }
 /**
-*checkIDTo1CBase - функция проверяет есть ли пользователь в базе 1с по телеграм ид.
+ *  checkIDTo1CBase - функция проверяет есть ли пользователь в базе 1с по телеграм ид.
  *  @param msg - метод API Telegram бота. msg - метод для работы с полученными сообщениями от пользователей.
  *  @param chatID- записывает id в  глобальную переменную,
  *  @param checkIn1C - в глобальную переменую устанвливает значение true или false
- **/
+ */
 export function checkIDTo1CBase(msg, chatID, checkIn1C) {
     let urlCheck1C = urlRequestHTTP("chekidver/", msg.chat.id);
     checkRequestHTTP(urlCheck1C)
@@ -48,7 +48,6 @@ export function checkIDTo1CBase(msg, chatID, checkIn1C) {
     console.log(Users.auth);
     return Users.auth;
 }
-
 /**
  * registrationPhoneUser- функция - Провекра, есть ли  номер телефона  в базе.
  * @param bot - API telegram bot
@@ -74,7 +73,6 @@ export async function registrationPhoneUser(bot, msg, phoneNumber, code, checkPh
             console.log(urlCheckPhoneNumber);
         });
 }
-
 /**
  * checkCodeEnter - функция проверят введный код пользователя
  * @param bot - API telegram bot
@@ -115,7 +113,7 @@ export function checkCodeEnter(bot, msg, code, checkCode) {
 export async function  sendSMSMobileGroup(code,bot,msg) {
     let urlSMSMobileGroup = await urlRequestHTTP("sendcodever/", Users.phone, code);
     let check = await checkRequestHTTP(urlSMSMobileGroup)
-    console.log(check+"555")
+    console.log(check+" status smsMobileHTTP")
     if(check==false){
         bot.sendMessage(msg.chat.id, "Если смс не пришло, через 10 мин кликнете на кнопку регистрация и ввдеити номер повторно")
     }
@@ -124,7 +122,6 @@ export async function  sendSMSMobileGroup(code,bot,msg) {
        console.log(error)
     );
 }
-
 /**
  * createKeyboard - создает клавиатуру
  * @param bot - API telegram bot
@@ -137,7 +134,6 @@ export function createKeyboard(bot, chatId) {
         }
     });
 }
-
 /**
  * getBalanceTo1C - Получает баланс с базы и отправляет его пользователю
  * @param chatID - получает ID с глобальной переменной
